@@ -52,7 +52,9 @@ class LiminalSpace():
         self.park = park
 
     def accept_guest(self, guest: "Guest"):
-        self.guest_to_time_left[guest] = -1
+        next_ride = guest.plan(self.park)
+        distance_to_next_ride = self.park.get_distance(guest.last_ride, next_ride)
+        self.guest_to_time_left[guest] = distance_to_next_ride
 
     def tick(self):
         # first, decide on a next destination for each guest
@@ -63,7 +65,7 @@ class LiminalSpace():
         new_guest_to_time_map = {}
         for guest, time_left in self.guest_to_time_left.items():
             guest.log_tick(self.description)
-            if time_left == -1:
+            if time_left == 0 and guest.next_ride == self:
                 next_ride = guest.plan(self.park)
                 if next_ride == self:
                     continue
