@@ -13,6 +13,9 @@ class Guest():
     def __str__(self):
         return self.name
 
+    def __repr__(self):
+        return self.name
+
     def plan(self, park):
         self.next_ride = random.choice(park.attractions)
         return self.next_ride

@@ -81,8 +81,8 @@ class LiminalSpace():
 
     def to_string(self, detailed=False):
         destination_map = defaultdict(lambda: [])
-        for guest in self.guest_to_time_left.keys():
-            destination_map[guest.next_ride].append(guest)
+        for guest, time in self.guest_to_time_left.items():
+            destination_map[guest.next_ride].append((guest, time))
         return "\n".join(
             f"Heading to {next_ride.name if next_ride else 'nowhere'}: {', '.join([str(guest) for guest in guests])}"
             for next_ride, guests in destination_map.items())
