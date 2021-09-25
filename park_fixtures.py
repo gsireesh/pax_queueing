@@ -11,15 +11,13 @@ class Attraction:
 
         self.queue = []
         self.riders = []
-        self.ticks_left_until_turnover = 1
+        self.ticks_left_until_turnover = 0
 
     def accept_guest(self, guest):
         self.queue.append(guest)
 
     def tick(self):
-        self.ticks_left_until_turnover -= 1
         if self.ticks_left_until_turnover == 0:
-
             # get people off of the ride
             for rider in self.riders:
                 rider.last_ride = self
@@ -34,6 +32,8 @@ class Attraction:
 
         for rider in self.queue:
             rider.log_tick(self.name)
+
+        self.ticks_left_until_turnover -= 1
 
     def to_string(self, detailed=False):
         return f"""
