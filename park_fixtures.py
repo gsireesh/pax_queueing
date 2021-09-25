@@ -1,6 +1,8 @@
 from collections import defaultdict
 from typing import Dict, List
 
+GUEST_REP_CHAR = "🤮"
+
 
 class Attraction:
     def __init__(self, name: str, duration_ticks: int, capacity: int, park=None):
@@ -39,8 +41,8 @@ class Attraction:
         return f"""
 {self.name}
 {'-' * len(self.name)}
-People in line: {', '.join([rider.name for rider in self.queue])}
-People on the ride: {', '.join([rider.name for rider in self.riders])}
+People in line: {', '.join([rider.name for rider in self.queue]) if detailed else GUEST_REP_CHAR * len(self.queue)}
+People on the ride: {', '.join([rider.name for rider in self.riders]) if detailed else GUEST_REP_CHAR * len(self.riders)}
 Time until turnover: {self.ticks_left_until_turnover}
 """
 
@@ -79,12 +81,15 @@ class LiminalSpace():
 
         self.guest_to_time_left = new_guest_to_time_map
 
+    def _stringify_guestlist(self, guestlist, detailed=False):
+        return ', '.join([str(guest) for guest in guestlist]) if detailed else GUEST_REP_CHAR * len(guestlist)
+
     def to_string(self, detailed=False):
         destination_map = defaultdict(lambda: [])
         for guest, time in self.guest_to_time_left.items():
             destination_map[guest.next_ride].append((guest, time))
         return "\n".join(
-            f"Heading to {next_ride.name if next_ride else 'nowhere'}: {', '.join([str(guest) for guest in guests])}"
+            f"Heading to {next_ride.name if next_ride else 'nowhere'}: {self._stringify_guestlist(guests, detailed)}"
             for next_ride, guests in destination_map.items())
 
 
@@ -120,7 +125,7 @@ class Park():
         whole_string = f"""
 LIMINAL SPACE
 -------------
-{self.liminal_space.to_string()}
+{self.liminal_space.to_string(detailed=detailed)}
 
 ATTRACTIONS
 -----------
