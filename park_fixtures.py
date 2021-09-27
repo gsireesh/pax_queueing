@@ -1,6 +1,8 @@
 from collections import defaultdict
 from typing import Dict, List
 
+import pandas as pd
+
 from constants import GUEST_REP_CHAR, STATE_WAITING, STATE_RIDING
 
 
@@ -142,3 +144,23 @@ ATTRACTIONS
 {attractions_string}
 """
         return whole_string
+
+    def get_guest_report(self):
+        guests_by_type = defaultdict(lambda: [])
+        for guest in self.guests:
+            guests_by_type[type(guest)].append(guest)
+
+        type_to_states = {}
+        for guest_type, guests in guests_by_type.items():
+            type_df = pd.DataFrame([guest.get_day_breakdown() for guest in guests])
+            time_waiting = type_df[STATE_WAITING].mean()
+            time_riding = type_df[STATE_RIDING].mean()
+
+            type_to_states[guest_type] = (time_waiting, time_riding)
+
+        return "\n".join(
+            [
+                f"Guests of type {str(guest_type)} spent an average of {time_waiting} ticks waiting, and {time_riding} ticks riding rides"
+                for guest_type, (time_waiting, time_riding) in type_to_states.items()
+            ]
+        )

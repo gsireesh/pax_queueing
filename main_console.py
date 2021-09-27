@@ -28,6 +28,8 @@ def main():
     print(guests[0].get_day_log())
     print(guests[0].get_day_breakdown_string())
 
+    print(park.get_guest_report())
+
 
 if __name__ == "__main__":
     main()
