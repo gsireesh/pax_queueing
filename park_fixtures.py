@@ -1,7 +1,7 @@
 from collections import defaultdict
 from typing import Dict, List
 
-GUEST_REP_CHAR = "🤮"
+from constants import GUEST_REP_CHAR, STATE_WAITING, STATE_RIDING
 
 
 class Attraction:
@@ -33,7 +33,10 @@ class Attraction:
             self.ticks_left_until_turnover = self.duration_ticks
 
         for rider in self.queue:
-            rider.log_tick(self.name)
+            rider.log_tick((self.name, STATE_WAITING))
+
+        for rider in self.riders:
+            rider.log_tick((self.name, STATE_RIDING))
 
         self.ticks_left_until_turnover -= 1
 
@@ -47,10 +50,10 @@ Time until turnover: {self.ticks_left_until_turnover}
 """
 
 
-class LiminalSpace():
+class LiminalSpace:
     def __init__(self, park):
         self.guest_to_time_left: Dict["Guest", int] = {}
-        self.description = "In between rides"
+        self.description = "Liminal Space"
         self.park = park
 
     def accept_guest(self, guest: "Guest"):
@@ -66,7 +69,7 @@ class LiminalSpace():
 
         new_guest_to_time_map = {}
         for guest, time_left in self.guest_to_time_left.items():
-            guest.log_tick(self.description)
+            guest.log_tick((self.description, STATE_RIDING))
             if time_left == 0 and guest.next_ride == self:
                 next_ride = guest.plan(self.park)
                 if next_ride == self:
@@ -82,7 +85,11 @@ class LiminalSpace():
         self.guest_to_time_left = new_guest_to_time_map
 
     def _stringify_guestlist(self, guestlist, detailed=False):
-        return ', '.join([str(guest) for guest in guestlist]) if detailed else GUEST_REP_CHAR * len(guestlist)
+        return (
+            ", ".join([str(guest) for guest in guestlist])
+            if detailed
+            else GUEST_REP_CHAR * len(guestlist)
+        )
 
     def to_string(self, detailed=False):
         destination_map = defaultdict(lambda: [])
@@ -90,10 +97,11 @@ class LiminalSpace():
             destination_map[guest.next_ride].append((guest, time))
         return "\n".join(
             f"Heading to {next_ride.name if next_ride else 'nowhere'}: {self._stringify_guestlist(guests, detailed)}"
-            for next_ride, guests in destination_map.items())
+            for next_ride, guests in destination_map.items()
+        )
 
 
-class Park():
+class Park:
     def __init__(self, attractions: List[Attraction]):
         self.attractions = attractions
         for attraction in self.attractions:
@@ -121,7 +129,9 @@ class Park():
             return 2
 
     def to_string(self, detailed=False):
-        attractions_string = '\n'.join([attraction.to_string(detailed=detailed) for attraction in self.attractions])
+        attractions_string = "\n".join(
+            [attraction.to_string(detailed=detailed) for attraction in self.attractions]
+        )
         whole_string = f"""
 LIMINAL SPACE
 -------------
