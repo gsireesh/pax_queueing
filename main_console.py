@@ -1,18 +1,14 @@
-import random
-
 from agents import Guest
-from naming import get_person_name, get_rollercoaster_names
-from park_fixtures import Attraction, Park
+from naming import get_person_name
+from park_fixtures import Park
+from predefs import get_attractions_1
 
-N_GUESTS = 40
+N_GUESTS = 400
 N_ATTRACTIONS = 3
 
 
 def main():
-    attractions = [
-        Attraction(name, random.randint(1, 12), random.randint(2, 10), None)
-        for name in get_rollercoaster_names(N_ATTRACTIONS)
-    ]
+    attractions = get_attractions_1()
     park = Park(attractions)
 
     guests = [Guest(get_person_name()) for i in range(N_GUESTS)]
