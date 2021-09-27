@@ -37,7 +37,7 @@ class Guest:
     def get_day_log(self):
         rle_log = _run_length_encode(self.history)
         return "\n".join(
-            [f"Spent {item[1]} ticks {item[0][0]} at {item[0][1].lower()}" for item in rle_log]
+            [f"Spent {item[1]} ticks {item[0][1]} at {item[0][0].lower()}" for item in rle_log]
         )
 
     def get_day_breakdown(self):
@@ -59,3 +59,33 @@ class Guest:
 
     def log_tick(self, tick_content):
         self.history.append(tick_content)
+
+
+class FixedItineraryGuest(Guest):
+    def __init__(self, name, itinerary, p_random_choice=0.05):
+        super().__init__(name=name)
+        self.itinerary_mutable = itinerary.copy()
+        self.itinerary = itinerary
+        self.p_random_choice = p_random_choice
+
+    def plan(self, park):
+        if self.itinerary_mutable and random.random() > self.p_random_choice:
+            self.next_ride = self.itinerary_mutable.pop()
+            return self.next_ride
+        else:
+            super().plan(park)
+
+
+class QueueLengthGuest(Guest):
+    def __init__(self, name):
+        super().__init__(name=name)
+
+    def plan(self, park):
+        min_queue_length = 1e10
+        next_ride = None
+        for ride in park.attractions:
+            if len(ride.queue) < min_queue_length:
+                min_queue_length = len(ride.queue)
+                next_ride = ride
+        self.next_ride = next_ride
+        return self.next_ride

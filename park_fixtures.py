@@ -71,7 +71,7 @@ class LiminalSpace:
 
         new_guest_to_time_map = {}
         for guest, time_left in self.guest_to_time_left.items():
-            guest.log_tick((self.description, STATE_RIDING))
+            guest.log_tick((self.description, STATE_WAITING))
             if time_left == 0 and guest.next_ride == self:
                 next_ride = guest.plan(self.park)
                 if next_ride == self:
