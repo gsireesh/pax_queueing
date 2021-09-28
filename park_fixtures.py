@@ -93,10 +93,14 @@ class LiminalSpace:
             else GUEST_REP_CHAR * len(guestlist)
         )
 
-    def to_string(self, detailed=False):
+    def _get_destination_map(self):
         destination_map = defaultdict(lambda: [])
         for guest, time in self.guest_to_time_left.items():
             destination_map[guest.next_ride].append((guest, time))
+        return destination_map
+
+    def to_string(self, detailed=False):
+        destination_map = self._get_destination_map()
         return "\n".join(
             f"Heading to {next_ride.name if next_ride else 'nowhere'}: {self._stringify_guestlist(guests, detailed)}"
             for next_ride, guests in destination_map.items()
@@ -110,6 +114,7 @@ class Park:
             attraction.park = self
         self.liminal_space = LiminalSpace(self)
         self.guests = []
+        self.historic_state = defaultdict(lambda: [])
 
     def accept_guest(self, guest):
         self.guests.append(guest)
@@ -117,8 +122,12 @@ class Park:
 
     def tick(self):
         self.liminal_space.tick()
+        destination_map = self.liminal_space._get_destination_map()
+        # for destination, queue in destination_map.items():
+        #     self.historic_state[f"liminal_space_to_{destination.name}"].append(len(queue))
         for attraction in self.attractions:
             attraction.tick()
+            self.historic_state[attraction.name].append(len(attraction.queue))
 
     def get_distance(self, thing1, thing2):
         if thing1 == thing2:
@@ -145,22 +154,29 @@ ATTRACTIONS
 """
         return whole_string
 
-    def get_guest_report(self):
+    def get_state(self):
+        return self.historic_state
+
+    def get_guest_stats_by_type(self):
         guests_by_type = defaultdict(lambda: [])
         for guest in self.guests:
             guests_by_type[type(guest)].append(guest)
 
-        type_to_states = {}
+        type_to_df = {}
         for guest_type, guests in guests_by_type.items():
             type_df = pd.DataFrame([guest.get_day_breakdown() for guest in guests])
-            time_waiting = type_df[STATE_WAITING].mean()
-            time_riding = type_df[STATE_RIDING].mean()
+            type_to_df[guest_type] = type_df
+        return type_to_df
 
+    def get_guest_report(self):
+        guest_dfs = self.get_guest_stats_by_type()
+        type_to_states = {}
+        for guest_type, guest_df in guest_dfs.items():
+            time_waiting = guest_df[STATE_WAITING].mean()
+            time_riding = guest_df[STATE_RIDING].mean()
             type_to_states[guest_type] = (time_waiting, time_riding)
 
-        return "\n".join(
-            [
-                f"Guests of type {str(guest_type)} spent an average of {time_waiting} ticks waiting, and {time_riding} ticks riding rides"
-                for guest_type, (time_waiting, time_riding) in type_to_states.items()
-            ]
-        )
+        return [
+            f"Guests of type {str(guest_type)} spent an average of {time_waiting} ticks waiting, and {time_riding} ticks riding rides"
+            for guest_type, (time_waiting, time_riding) in type_to_states.items()
+        ]
