@@ -54,7 +54,7 @@ class Guest:
         return f"Spent {activity_to_time_map[STATE_WAITING]} ticks waiting and in between rides, and {activity_to_time_map[STATE_RIDING]} ticks on rides"
 
     def plan(self, park):
-        self.next_ride = random.choice(park.attractions)
+        self.next_ride = random.choices(park.attractions, weights=self.preferences, k=1)[0]
         return self.next_ride
 
     def log_tick(self, tick_content):
